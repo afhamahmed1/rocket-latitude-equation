@@ -1,0 +1,66 @@
+20210417_Adventurer_J510W_1_Raven.csv
+Time@Axial Accel (Gs),Axial Accel (Gs),bILBA,Time@Baro (Atm),Baro (Atm),bILBA,Time@Current Draw (A),Current Draw (A),bILBA,Time@Lateral Accel (Gs),Lateral Accel (Gs),bILBA,Time@Temperature (F),Temperature (F),bILBA,Time@Velocity (Accel-Ft/Sec),Velocity (Accel-Ft/Sec),bILBA,Time@Volts Battery (V),Volts Battery (V),bILBA,Time@Volts Pyro 3rd (V),Volts Pyro 3rd (V),bILBA,Time@Volts Pyro 4th (V),Volts Pyro 4th (V),bILBA,Time@Volts Pyro Apogee (V),Volts Pyro Apogee (V),bILBA,Time@Volts Pyro Main (V),Volts Pyro Main (V),bILBA,Time@[Altitude (Accel-Ft)],[Altitude (Accel-Ft)],bILBA,Time@[Altitude (Baro-Ft-AGL)],[Altitude (Baro-Ft-AGL)],bILBA,Time@[Altitude (Baro-Ft-ASL)],[Altitude (Baro-Ft-ASL)],bILBA,Time@[Velocity (Accel-Ft/Sec)],[Velocity (Accel-Ft/Sec)],bILBA,Time@[Velocity (Accel-MPH)],[Velocity (Accel-MPH)],bILBA
+0.02,1.06,b0000,0.445,0.9062,b1100,0.405,0,b1100,0.04125,0,b0000,0.44,90.81,b1100,0.45,164.5,b1100,0.435,4.065,b1100,0.42,-0.018,b1100,0.425,-0.018,b1100,0.41,4.065,b1100,0.415,4.029,b1100,0.02,0,b0000,0.445,6.17578,b1100,0.445,2700.18,b1100,0.02,0,b0000,0.02,0,b0000
+
+20210417_Adventurer_J510W_1_GPS.csv
+UTCTIME,UNIXTIME,ALT,LAT,LON,#SATS,FIX,HORZV,VERTV,HEAD,FLAGS,>40,>32,>24,RSSI,BATT
+Apr 17 2021 19:08:52.000 UTC,1618711732.000,7746,34.49679060,-116.95239170,21,3,9,-60,123,0x03,0,17,20,148,4.018
+
+
+
+20210417_Adventurer_J530_1_Raven.csv
+Time@Axial Accel (Gs),Axial Accel (Gs),bILBA,Time@Baro (Atm),Baro (Atm),bILBA,Time@Current Draw (A),Current Draw (A),bILBA,Time@Lateral Accel (Gs),Lateral Accel (Gs),bILBA,Time@Temperature (F),Temperature (F),bILBA,Time@Velocity (Accel-Ft/Sec),Velocity (Accel-Ft/Sec),bILBA,Time@Volts Battery (V),Volts Battery (V),bILBA,Time@Volts Pyro 3rd (V),Volts Pyro 3rd (V),bILBA,Time@Volts Pyro 4th (V),Volts Pyro 4th (V),bILBA,Time@Volts Pyro Apogee (V),Volts Pyro Apogee (V),bILBA,Time@Volts Pyro Main (V),Volts Pyro Main (V),bILBA,Time@[Altitude (Accel-Ft)],[Altitude (Accel-Ft)],bILBA,Time@[Altitude (Baro-Ft-AGL)],[Altitude (Baro-Ft-AGL)],bILBA,Time@[Altitude (Baro-Ft-ASL)],[Altitude (Baro-Ft-ASL)],bILBA,Time@[Velocity (Accel-Ft/Sec)],[Velocity (Accel-Ft/Sec)],bILBA,Time@[Velocity (Accel-MPH)],[Velocity (Accel-MPH)],bILBA
+
+20210417_Adventurer_J530_1_GPS.csv
+UTCTIME,UNIXTIME,ALT,LAT,LON,#SATS,FIX,HORZV,VERTV,HEAD,FLAGS,>40,>32,>24,RSSI,BATT
+Apr 17 2021 21:39:33.500 UTC,1618720773.500,2845,34.49501440,-116.95778580,16,3,0,0,-122,0x03,1,12,16,187,3.914
+
+2021-04-17-Log_GPS.csv
+TRACKER,DATE,TIME,LAT,LON,ALT,FIX,HORZV,VERTV,HEAD,FLAGS,#TOT,>40,>32,>24,RSSI,BATT
+E178_TK_02 ,2021-04-17,11:47:30.531,34.494618,-116.957784,2855,3,0,0,-162,0x01,8,0,6,8,0,0.000
+
+22020609_Adv_J825R_F1_Trimmed.TXT
+ICM data in us, milli-g, deg/s, milli-T, deg C
+LIS data in us, g
+MS5 data in us, deg C, Pa
+ADC data in us, deg C, Counts
+VOL data in us, Volts
+GPS data in us, 1E7 deg, mm, #, ISO Date Time
+LIS, t, 1259999668, xh, 0.049, yh, 0.293, zh, -0.098
+ICM, t, 1260000508, xa, 15.625, ya, 985.352, za, 20.020, xg, -0.793, yg, -0.732, zg, -0.732, xm, -34.950, ym, 62.700, zm, 20.550, T, 62.10
+LIS, t, 1260000624, xh, 0.049, yh, 0.342, zh, -0.098
+ICM, t, 1260001392, xa, 19.043, ya, 979.980, za, 20.996, xg, -0.854, yg, -0.732, zg, -0.732, xm, -34.950, ym, 62.700, zm, 20.550, T, 61.77
+ADC, t, 1260001403, T1, 37.114, T2, 31.136, C1, 2579, C2, 2332
+LIS, t, 1260001631, xh, -0.342, yh, 0.244, zh, 0.098
+
+
+20220610_ADV_J570_Trimmed.TXT
+ICM data in us, milli-g, deg/s, milli-T, deg C
+LIS data in us, g
+MS5 data in us, deg C, Pa
+ADC data in us, deg C, Counts
+VOL data in us, Volts
+GPS data in us, 1E7 deg, mm, #, ISO Date Time
+ICM, t, 556296663, xa, -14.160, ya, 987.793, za, -27.344, xg, -0.854, yg, 0.061, zg, -0.793, xm, -14.850, ym, 66.450, zm, -23.700, T, 43.99
+ICM, t, 556297547, xa, -13.672, ya, 989.258, za, -28.809, xg, -0.976, yg, 0.000, zg, -0.549, xm, -14.850, ym, 66.450, zm, -23.700, T, 44.18
+LIS, t, 556297585, xh, 0.244, yh, 0.489, zh, 0.000
+ICM, t, 556298433, xa, -11.230, ya, 998.047, za, -29.297, xg, -0.732, yg, 0.183, zg, -0.671, xm, -14.850, ym, 66.450, zm, -23.700, T, 44.18
+
+20220611_Adv_J530_Trimmed.TXT
+ICM data in us, milli-g, deg/s, milli-T, deg C
+LIS data in us, g
+MS5 data in us, deg C, Pa
+ADC data in us, deg C, Counts
+VOL data in us, Volts
+GPS data in us, 1E7 deg, mm, #, ISO Date Time
+ICM, t, 1629999344, xa, -106.445, ya, 976.562, za, -121.094, xg, -0.610, yg, -0.061, zg, -0.610, xm, -4.800, ym, 64.200, zm, -25.800, T, 49.40
+LIS, t, 1630000137, xh, 0.098, yh, 0.635, zh, 0.195
+ICM, t, 1630000253, xa, -103.027, ya, 980.469, za, -124.023, xg, -0.732, yg, -0.122, zg, -0.610, xm, -4.800, ym, 64.200, zm, -25.800, T, 49.26
+ICM, t, 1630001109, xa, -107.422, ya, 980.469, za, -126.465, xg, -0.732, yg, -0.244, zg, -0.244, xm, -4.800, ym, 64.200, zm, -25.800, T, 49.64
+ADC, t, 1630001120, T1, 34.678, T2, 31.322, C1, 2481, C2, 2340
+LIS, t, 1630001207, xh, 0.098, yh, 0.147, zh, -0.293
+ICM, t, 1630001993, xa, -102.539, ya, 975.098, za, -123.535, xg, -0.610, yg, -0.183, zg, -0.305, xm, -4.800, ym, 64.200, zm, -25.800, T, 49.12
+LIS, t, 1630002125, xh, -0.293, yh, 0.684, zh, 0.000
+ICM, t, 1630002880, xa, -95.215, ya, 970.215, za, -125.488, xg, -0.854, yg, -0.183, zg, -0.366, xm, -4.800, ym, 64.200, zm, -25.800, T, 49.59
+LIS, t, 1630003127, xh, -0.147, yh, 0.537, zh, -0.586
+MS5, t, 1630003489, T, 45.11, P, 91766
