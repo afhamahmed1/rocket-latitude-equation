@@ -1,0 +1,2 @@
+motor_name,manufacturer,avg_thrust_N,initial_thrust_N,max_thrust_N,total_impulse_Ns,burn_time_s
+1115J530-15A,Cesaroni,531.2,723.2,828.8,1115.5,2.1

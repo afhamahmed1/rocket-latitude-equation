@@ -1,6 +1,3 @@
 flight_id,rocket_id,motor_name,altimeter_file,gps_file
 20210417_Adventurer_J510W_1,Madcow Adventurer,J510W,data/altimeter/20210417_Adventurer_J510W_1_Raven.csv,data/gps/20210417_Adventurer_J510W_1_GPS.csv
 20210417_Adventurer_J530_1,Madcow Adventurer,J530,data/altimeter/20210417_Adventurer_J530_1_Raven.csv,data/gps/20210417_Adventurer_J530_1_GPS.csv
-20220609_Adv_J825R_F1,Madcow Adventurer,J825R,data/altimeter/22020609_Adv_J825R_F1_Trimmed.TXT,
-20220610_ADV_J570,Madcow Adventurer,J570,data/altimeter/20220610_ADV_J570_Trimmed.TXT,
-20220611_Adv_J530,Madcow Adventurer,J530,data/altimeter/20220611_Adv_J530_Trimmed.TXT,

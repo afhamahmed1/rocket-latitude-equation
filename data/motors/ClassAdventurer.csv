@@ -1,0 +1,3 @@
+Warnings,Name,Configuration,Velocity off rod (m/s),Apogee (m),Velocity at deployment (m/s),Optimum delay (s),Max. velocity (m/s),Max. acceleration (m/s²),Time to apogee (s),Flight time (s),Ground hit velocity (m/s)
+"Recovery device deployment at high speed (25.8 m/s):  ""Parachute""",Simulation 1,[HP-I140W-14],11.073,745.678,25.782,NaN,117.745,65.884,12.976,65.393,6.801
+Recovery device deployment at high speed (26.3 m/s),Simulation 12,[J435WS-14],22.224,2277.881,26.264,NaN,276.163,242.295,20.044,123.521,6.695

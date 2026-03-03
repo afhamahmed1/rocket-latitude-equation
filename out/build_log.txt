@@ -1,0 +1,12 @@
+[2026-03-02 14:21:49] Data dir: D:\Masters\Thesis\Rocket Latitude\data
+[2026-03-02 14:21:49] Out dir:  D:\Masters\Thesis\Rocket Latitude\out_test
+[2026-03-02 14:21:49] ---- 20210417_Adventurer_J510W_1
+[2026-03-02 14:21:49] rocket_id=Madcow Adventurer motor=J510W
+[2026-03-02 14:21:49] altimeter=data\altimeter\20210417_Adventurer_J510W_1_Raven.csv
+[2026-03-02 14:21:49] gps=data\gps\20210417_Adventurer_J510W_1_GPS.csv
+[2026-03-02 14:21:50] ---- 20210417_Adventurer_J530_1
+[2026-03-02 14:21:50] rocket_id=Madcow Adventurer motor=J530
+[2026-03-02 14:21:50] altimeter=data\altimeter\20210417_Adventurer_J530_1_Raven.csv
+[2026-03-02 14:21:50] gps=data\gps\20210417_Adventurer_J530_1_GPS.csv
+[2026-03-02 14:21:51] Wrote d:\Masters\Thesis\Rocket Latitude\out_test\flights_dataset.csv rows=2 failures=0
+[2026-03-02 14:21:51] Done.
