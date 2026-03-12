@@ -1,0 +1,2 @@
+Warnings,Name,Configuration,Velocity off rod (m/s),Apogee (m),Velocity at deployment (m/s),Optimum delay (s),Max. velocity (m/s),Max. acceleration (m/s²),Time to apogee (s),Flight time (s),Ground hit velocity (m/s)
+"Recovery device deployment at high speed (25.8 m/s):  ""Parachute""",Simulation 2,[I245G-14],17.627,826.92,25.837,11.506,133.348,164.889,12.969,67.707,6.833

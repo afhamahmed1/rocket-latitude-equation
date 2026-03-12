@@ -1,0 +1,2 @@
+Warnings,Name,Configuration,Velocity off rod (m/s),Apogee (m),Velocity at deployment (m/s),Optimum delay (s),Max. velocity (m/s),Max. acceleration (m/s²),Time to apogee (s),Flight time (s),Ground hit velocity (m/s)
+"Recovery device deployment at high speed (26.9 m/s):  ""Parachute""",Simulation 6,[J825R-14],27.768,2729.307,26.924,20.217,336.134,398.708,21.332,139.325,7.194

@@ -1,4 +1,4 @@
-# Parameters:,Wind direction:,12°,Angle of attack:,0°,Roll rate:,0 °/s,Active stages:,Stage,Flight configuration:,[J435WS-14]
+# Parameters:,Wind direction:,12°,Angle of attack:,2°,Roll rate:,3 °/s,Active stages:,Stage,Flight configuration:,[No motors]
 # 121 data points written for 10 variables.
 # Mach number,CP (Modified Adventurer 54) (cm),CNα (Modified Adventurer 54) (​),Pressure CD (Modified Adventurer 54) (​),Base CD (Modified Adventurer 54) (​),Friction CD (Modified Adventurer 54) (​),Per instance CD (Nose cone) (​),Total CD (Modified Adventurer 54) (​),Roll forcing coefficient (Fin set) (​),Roll damping coefficient (Fin set) (​),Total Cl (Fin set) (​)
 0,130.72,14.741,0.014,0.08,2.017,0.227,2.11,0,0,0

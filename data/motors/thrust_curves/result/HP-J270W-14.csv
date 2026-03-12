@@ -1,0 +1,2 @@
+Warnings,Name,Configuration,Velocity off rod (m/s),Apogee (m),Velocity at deployment (m/s),Optimum delay (s),Max. velocity (m/s),Max. acceleration (m/s²),Time to apogee (s),Flight time (s),Ground hit velocity (m/s)
+"Recovery device deployment at high speed (26.3 m/s):  ""Parachute""",Simulation 7,[HP-J270W-14],15.632,2013.573,26.278,16.95,237.876,128.15,19.463,116.078,6.971
