@@ -5,7 +5,7 @@ build_apogee_lat_dataset.py
 Creates a one-row-per-flight dataset for the task:
     TARGET = latitude at apogee
 
-Works with the file formats you shared:
+Works with the file formats:
 - Raven .csv (with columns like "Time@[Altitude (Baro-Ft-AGL)]" and "[Altitude (Baro-Ft-AGL)]")
 - Featherweight GPS .csv/.xlsx (columns like UNIXTIME, ALT, LAT, LON, ...)
 - Trimmed .TXT (OPTIONAL: if it contains actual GPS lines; many Trimmed files do NOT)
