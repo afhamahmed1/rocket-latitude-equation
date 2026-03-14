@@ -272,6 +272,78 @@ def read_openrocket_template(path: Path) -> Dict[str, float]:
     }
 
 
+def load_drag_curve(path: Path) -> np.ndarray:
+    header = None
+    for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("#"):
+            break
+        stripped = stripped[1:].strip()
+        if "mach" in stripped.lower():
+            header = [part.strip() for part in stripped.split(",")]
+
+    if header is not None:
+        df = pd.read_csv(path, comment="#", header=None, names=header)
+    else:
+        df = pd.read_csv(path)
+
+    cols = list(df.columns)
+    if len(cols) < 2:
+        raise ValueError(f"Drag curve file must provide at least two columns: {path}")
+
+    mach_col = next((c for c in cols if "mach" in str(c).lower()), cols[0])
+    cd_col = next((c for c in cols if "total cd" in str(c).lower()), None)
+    if cd_col is None:
+        cd_col = cols[1]
+
+    curve = (
+        df[[mach_col, cd_col]]
+        .apply(pd.to_numeric, errors="coerce")
+        .dropna()
+        .drop_duplicates(subset=[mach_col])
+        .sort_values(mach_col)
+    )
+    if len(curve) < 2:
+        raise ValueError(f"Drag curve file did not yield enough usable Mach/CD rows: {path}")
+    return curve.to_numpy(float)
+
+
+def load_thrust_curve(path: Path) -> np.ndarray:
+    header = None
+    for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("#"):
+            break
+        stripped = stripped[1:].strip()
+        if "time" in stripped.lower() and "thrust" in stripped.lower():
+            header = [part.strip() for part in stripped.split(",")]
+
+    if header is not None:
+        df = pd.read_csv(path, comment="#", header=None, names=header)
+    else:
+        df = pd.read_csv(path)
+
+    cols = list(df.columns)
+    if len(cols) < 2:
+        raise ValueError(f"Thrust curve file must provide at least two columns: {path}")
+
+    time_col = next((c for c in cols if "time" in str(c).lower()), cols[0])
+    thrust_col = next((c for c in cols if "thrust" in str(c).lower()), None)
+    if thrust_col is None:
+        thrust_col = cols[1]
+
+    curve = (
+        df[[time_col, thrust_col]]
+        .apply(pd.to_numeric, errors="coerce")
+        .dropna()
+        .drop_duplicates(subset=[time_col])
+        .sort_values(time_col)
+    )
+    if len(curve) < 2:
+        raise ValueError(f"Thrust curve file did not yield enough usable time/thrust rows: {path}")
+    return curve.to_numpy(float)
+
+
 # -------------------------
 # Motor loading / fallback thrust curve generation
 # -------------------------
@@ -360,6 +432,12 @@ def simulate(
     from rocketpy.motors import GenericMotor
     from rocketpy import Flight
 
+    def lookup_geodetic(value_getter, t_s: float) -> Tuple[float, str]:
+        try:
+            return float(value_getter(t_s)), ""
+        except Exception as exc:
+            return float("nan"), str(exc)
+
     # Build environment with multi-level winds from IGRA profile
     env = Environment(latitude=pad_lat, longitude=pad_lon, elevation=elevation_m)
     wind_u = list(zip(wind_profile.z_m.tolist(), wind_profile.wind_u.tolist()))
@@ -373,14 +451,16 @@ def simulate(
         wind_u=wind_u,
         wind_v=wind_v,
     )
+    drag_off_curve = load_drag_curve(drag_off)
+    drag_on_curve = load_drag_curve(drag_on)
 
     # Rocket (mass without motor), inertia about COM w/o motor, drag curves. :contentReference[oaicite:10]{index=10}
     rocket = Rocket(
         radius=radius_m,
         mass=rocket_mass_kg,
         inertia=inertia,
-        power_off_drag=str(drag_off),
-        power_on_drag=str(drag_on),
+        power_off_drag=drag_off_curve,
+        power_on_drag=drag_on_curve,
         center_of_mass_without_motor=0,
         coordinate_system_orientation="tail_to_nose",
     )
@@ -388,7 +468,7 @@ def simulate(
     # Motor: prefer real thrust curve file; otherwise generate fallback trapezoid
     thrust_source = None
     if motor.thrust_curve_file and motor.thrust_curve_file.exists():
-        thrust_source = str(motor.thrust_curve_file)
+        thrust_source = load_thrust_curve(motor.thrust_curve_file)
     else:
         if not allow_generated_thrust_curves:
             raise FileNotFoundError(
@@ -445,15 +525,14 @@ def simulate(
 
     # Outputs
     t_ap = float(flight.apogee_time)
-    lat_ap = float(flight.latitude(t_ap))  # Flight.latitude is a function of time. :contentReference[oaicite:13]{index=13}
-    lon_ap = float(flight.longitude(t_ap))
     apogee_m = float(flight.apogee)
-
     # drift in local frame
     apogee_x = float(flight.apogee_x)  # east
     apogee_y = float(flight.apogee_y)  # north
+    lat_ap, lat_err = lookup_geodetic(flight.latitude, t_ap)  # Flight.latitude is a function of time. :contentReference[oaicite:13]{index=13}
+    lon_ap, lon_err = lookup_geodetic(flight.longitude, t_ap)
 
-    return {
+    out = {
         "apogee_time_s": t_ap,
         "apogee_alt_m": apogee_m,
         "apogee_lat_deg": lat_ap,
@@ -461,6 +540,10 @@ def simulate(
         "apogee_east_m": apogee_x,
         "apogee_north_m": apogee_y,
     }
+    errors = [err for err in [lat_err, lon_err] if err]
+    if errors:
+        out["geodetic_lookup_error"] = " | ".join(dict.fromkeys(errors))
+    return out
 
 
 def main() -> None:
@@ -516,8 +599,8 @@ def main() -> None:
 
     # Parse IGRA soundings (multi-level wind)
     profiles = parse_igra2_profiles(igra_file, max_profiles=max(args.n_wind_profiles, 20))
-    if len(profiles) < 2:
-        raise SystemExit("Not enough IGRA profiles parsed. Ensure your file contains multiple '#STATION YYYY MM DD HH ...' blocks and GPH tokens like '18905A'.")
+    if len(profiles) < 1:
+        raise SystemExit("No IGRA profiles parsed. Ensure your file contains '#STATION YYYY MM DD HH ...' blocks and GPH tokens like '18905A'.")
 
     # Select subset for the run
     profiles = profiles[: args.n_wind_profiles]
@@ -581,7 +664,13 @@ def main() -> None:
             out_row = {"sim_id": sim_id, "motor_id": mdef.motor_id, "wind_profile_id": wp.profile_id}
             out_row.update(out)
             results_rows.append(out_row)
-            print(f"[OK] {sim_id} apogee={out['apogee_alt_m']:.1f} m lat={out['apogee_lat_deg']:.6f}")
+            status = "WARN" if out.get("geodetic_lookup_error") else "OK"
+            msg = f"[{status}] {sim_id} apogee={out['apogee_alt_m']:.1f} m"
+            if np.isfinite(out.get("apogee_lat_deg", float("nan"))):
+                msg += f" lat={out['apogee_lat_deg']:.6f}"
+            if out.get("geodetic_lookup_error"):
+                msg += " geodetic_lookup=failed"
+            print(msg)
         except Exception as e:
             print(f"[FAIL] {sim_id}: {e}")
             results_rows.append({

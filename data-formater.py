@@ -235,9 +235,9 @@ def interp_1d(df: pd.DataFrame, x: str, y: str, xq: float, allow_extrapolation: 
     ys = d[y].to_numpy(float)
     if len(xs) < 2:
         return float("nan")
-    if xq <= xs[0]:
+    if xq < xs[0]:
         return float(ys[0]) if allow_extrapolation else float("nan")
-    if xq >= xs[-1]:
+    if xq > xs[-1]:
         return float(ys[-1]) if allow_extrapolation else float("nan")
     return float(np.interp(xq, xs, ys))
 
