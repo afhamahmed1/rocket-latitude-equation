@@ -1,7 +1,7 @@
 motor_id,thrust_curve_file,diameter_m,length_m,total_mass_kg,prop_mass_kg,burn_time_s
 517I255-16A-16,data/motors/thrust_curves/517I255-16A-16.csv,0.0575,0.169,2.556,0.750,3.0
 1013J453-16A-16,data/motors/thrust_curves/1013J453-16A-16.csv,0.0575,0.169,3.004,0.500,2.5
-1115J530-15A,data/motors/thrust_curves/1115J530-15A.csv,0.0575,0.169,3.017,0.577,2.1
+1115J530-15A,data/motors/thrust_curves/1115J530-15A-15.csv,0.0575,0.169,3.017,0.577,2.1
 HP-I140W-14,data/motors/thrust_curves/HP-I140W-14.csv,0.0575,0.169,2.396,0.480,2.0
 HP-J270W-14,data/motors/thrust_curves/HP-J270W-14.csv,0.0575,0.169,2.682,0.600,2.5
 HP-J425R-14,data/motors/thrust_curves/HP-J425R-14.csv,0.0575,0.169,2.405,0.500,2.5

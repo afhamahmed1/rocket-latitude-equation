@@ -1,0 +1,7 @@
+.venv/
+.uv-cache/
+.uv-python/
+.tmp/
+.vendor/
+out-env-check/
+__pycache__/

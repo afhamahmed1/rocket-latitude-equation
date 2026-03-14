@@ -34,6 +34,9 @@ import numpy as np
 import pandas as pd
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent
+
+
 # -------------------------
 # IGRA2 parsing
 # -------------------------
@@ -74,6 +77,18 @@ def wind_uv_from_wdir_wspd(wdir_from_deg: float, wspd_mps: float) -> Tuple[float
     return u, v
 
 
+def resolve_input_path(raw_path: str, base_dir: Path) -> Path:
+    p = Path(raw_path)
+    if p.is_absolute():
+        return p
+
+    candidates = [base_dir / p, PROJECT_ROOT / p, p]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return base_dir / p
+
+
 def parse_igra2_profiles(path: Path, max_profiles: int = 20) -> List[WindProfile]:
     """
     Parses an IGRA2-like text file containing multiple soundings separated by header lines starting with '#'.
@@ -94,9 +109,10 @@ def parse_igra2_profiles(path: Path, max_profiles: int = 20) -> List[WindProfile
     v_list: List[float] = []
     surf_wdir = float("nan")
     surf_wspd = float("nan")
+    lowest_z = float("inf")
 
     def flush():
-        nonlocal z_list, u_list, v_list, cur_station, cur_dt, cur_lat, cur_lon, surf_wdir, surf_wspd
+        nonlocal z_list, u_list, v_list, cur_station, cur_dt, cur_lat, cur_lon, surf_wdir, surf_wspd, lowest_z
         if cur_station and cur_dt and len(z_list) >= 3:
             # sort by altitude, remove duplicates
             arr = np.array(list(zip(z_list, u_list, v_list)), dtype=float)
@@ -120,6 +136,7 @@ def parse_igra2_profiles(path: Path, max_profiles: int = 20) -> List[WindProfile
                 )
         z_list, u_list, v_list = [], [], []
         surf_wdir, surf_wspd = float("nan"), float("nan")
+        lowest_z = float("inf")
 
     for line in text:
         line = line.strip()
@@ -176,14 +193,13 @@ def parse_igra2_profiles(path: Path, max_profiles: int = 20) -> List[WindProfile
             continue
 
         u, v = wind_uv_from_wdir_wspd(wdir, wspd)
+        if gph_m < lowest_z:
+            lowest_z = gph_m
+            surf_wdir = float(wdir)
+            surf_wspd = float(wspd)
         z_list.append(gph_m)
         u_list.append(u)
         v_list.append(v)
-
-        # surface estimate: lowest altitude sample
-        if not np.isfinite(surf_wdir) or gph_m < min(z_list):
-            surf_wdir = float(wdir)
-            surf_wspd = float(wspd)
 
     flush()
     return profiles
@@ -274,10 +290,13 @@ def load_motors_manual(path: Path) -> List[MotorDef]:
     df = pd.read_csv(path)
     motors: List[MotorDef] = []
     for _, r in df.iterrows():
+        thrust_curve_file = None
+        if pd.notna(r.get("thrust_curve_file")) and str(r["thrust_curve_file"]).strip():
+            thrust_curve_file = resolve_input_path(str(r["thrust_curve_file"]).strip(), path.parent)
         motors.append(
             MotorDef(
                 motor_id=str(r["motor_id"]),
-                thrust_curve_file=Path(r["thrust_curve_file"]) if pd.notna(r.get("thrust_curve_file")) and str(r["thrust_curve_file"]).strip() else None,
+                thrust_curve_file=thrust_curve_file,
                 diameter_m=float(r["diameter_m"]),
                 length_m=float(r["length_m"]),
                 total_mass_kg=float(r["total_mass_kg"]),
@@ -334,12 +353,12 @@ def simulate(
     inclination_deg: float,
     heading_deg: float,
     seed: int,
+    allow_generated_thrust_curves: bool,
+    generated_curves_dir: Path,
 ) -> Dict[str, float]:
     from rocketpy import Environment, Rocket
     from rocketpy.motors import GenericMotor
     from rocketpy import Flight
-
-    rng = random.Random(seed)
 
     # Build environment with multi-level winds from IGRA profile
     env = Environment(latitude=pad_lat, longitude=pad_lon, elevation=elevation_m)
@@ -371,13 +390,18 @@ def simulate(
     if motor.thrust_curve_file and motor.thrust_curve_file.exists():
         thrust_source = str(motor.thrust_curve_file)
     else:
+        if not allow_generated_thrust_curves:
+            raise FileNotFoundError(
+                f"Missing thrust curve for motor {motor.motor_id}. "
+                "Provide a valid curve file or re-run with --allow-generated-thrust-curves."
+            )
         # fallback curve: estimate peak and initial thrust ~ avg thrust
         # total impulse estimate: avg_thrust * burn_time
         avg_thrust = 500.0  # generic fallback if you didn't provide a curve
         total_impulse = avg_thrust * motor.burn_time_s
         peak_thrust = 1.5 * avg_thrust
         initial_thrust = 1.2 * avg_thrust
-        fallback_curve = Path("out") / "generated_thrust_curves" / f"{motor.motor_id}.csv"
+        fallback_curve = generated_curves_dir / f"{motor.motor_id}.csv"
         write_trapezoid_thrust_curve(fallback_curve, motor.burn_time_s, total_impulse, peak_thrust, initial_thrust)
         thrust_source = str(fallback_curve)
 
@@ -455,24 +479,43 @@ def main() -> None:
     ap.add_argument("--inclination_deg", type=float, default=90.0)
     ap.add_argument("--heading_jitter_deg", type=float, default=10.0)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--allow-generated-thrust-curves", action="store_true", help="Use a synthetic trapezoidal thrust curve when a motor curve file is missing")
     args = ap.parse_args()
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    generated_curves_dir = out_dir / "generated_thrust_curves"
 
-    rocket_const = read_openrocket_template(Path(args.openrocket_template))
+    openrocket_template = resolve_input_path(args.openrocket_template, PROJECT_ROOT)
+    drag_off = resolve_input_path(args.drag_off, PROJECT_ROOT)
+    drag_on = resolve_input_path(args.drag_on, PROJECT_ROOT)
+    igra_file = resolve_input_path(args.igra_file, PROJECT_ROOT)
+    motors_csv = resolve_input_path(args.motors_csv, PROJECT_ROOT)
+
+    rocket_const = read_openrocket_template(openrocket_template)
     pad_lat = rocket_const["pad_lat_deg"]
     pad_lon = rocket_const["pad_lon_deg"]
     rocket_mass = rocket_const["mass_wo_motor_kg"]
     radius = rocket_const["radius_m"]
     inertia = (rocket_const["I11"], rocket_const["I22"], rocket_const["I33"])
 
-    motors = load_motors_manual(Path(args.motors_csv))
+    motors = load_motors_manual(motors_csv)
     if not motors:
         raise SystemExit("No motors loaded from motors_manual.csv")
 
+    if not args.allow_generated_thrust_curves:
+        missing_curves = [
+            m.motor_id for m in motors if m.thrust_curve_file is None or not m.thrust_curve_file.exists()
+        ]
+        if missing_curves:
+            missing_str = ", ".join(missing_curves)
+            raise SystemExit(
+                "Missing thrust curve files for: "
+                f"{missing_str}. Fix the metadata paths or re-run with --allow-generated-thrust-curves."
+            )
+
     # Parse IGRA soundings (multi-level wind)
-    profiles = parse_igra2_profiles(Path(args.igra_file), max_profiles=max(args.n_wind_profiles, 20))
+    profiles = parse_igra2_profiles(igra_file, max_profiles=max(args.n_wind_profiles, 20))
     if len(profiles) < 2:
         raise SystemExit("Not enough IGRA profiles parsed. Ensure your file contains multiple '#STATION YYYY MM DD HH ...' blocks and GPH tokens like '18905A'.")
 
@@ -521,8 +564,8 @@ def main() -> None:
                 pad_lat=pad_lat,
                 pad_lon=pad_lon,
                 elevation_m=args.elevation_m,
-                drag_off=Path(args.drag_off),
-                drag_on=Path(args.drag_on),
+                drag_off=drag_off,
+                drag_on=drag_on,
                 rocket_mass_kg=rocket_mass,
                 radius_m=radius,
                 inertia=inertia,
@@ -532,6 +575,8 @@ def main() -> None:
                 inclination_deg=args.inclination_deg,
                 heading_deg=heading,
                 seed=args.seed + i,
+                allow_generated_thrust_curves=args.allow_generated_thrust_curves,
+                generated_curves_dir=generated_curves_dir,
             )
             out_row = {"sim_id": sim_id, "motor_id": mdef.motor_id, "wind_profile_id": wp.profile_id}
             out_row.update(out)

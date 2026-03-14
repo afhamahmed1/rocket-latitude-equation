@@ -75,6 +75,9 @@ import numpy as np
 import pandas as pd
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent
+
+
 # -----------------------------
 # Logging
 # -----------------------------
@@ -226,22 +229,34 @@ def detect_liftoff(
     return float(t[idx[0]]) if len(idx) else float(t[0])
 
 
-def interp_1d(df: pd.DataFrame, x: str, y: str, xq: float) -> float:
+def interp_1d(df: pd.DataFrame, x: str, y: str, xq: float, allow_extrapolation: bool = False) -> float:
     d = df[[x, y]].dropna().sort_values(x)
     xs = d[x].to_numpy(float)
     ys = d[y].to_numpy(float)
     if len(xs) < 2:
         return float("nan")
     if xq <= xs[0]:
-        return float(ys[0])
+        return float(ys[0]) if allow_extrapolation else float("nan")
     if xq >= xs[-1]:
-        return float(ys[-1])
+        return float(ys[-1]) if allow_extrapolation else float("nan")
     return float(np.interp(xq, xs, ys))
 
 
 def delta_north_m(delta_lat_deg: float) -> float:
     R = 6371000.0
     return R * math.radians(delta_lat_deg)
+
+
+def resolve_input_path(raw_path: str, base_dir: Path) -> Path:
+    p = Path(raw_path)
+    if p.is_absolute():
+        return p
+
+    candidates = [base_dir / p, PROJECT_ROOT / p, p]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return base_dir / p
 
 
 # -----------------------------
@@ -430,7 +445,13 @@ def gps_pad_and_liftoff(gps: pd.DataFrame, alt_rise_m: float, slope_mps: float) 
     return liftoff, pad_lat, pad_lon
 
 
-def gps_apogee_by_peak_alt(gps: pd.DataFrame, alt_rise_m: float, slope_mps: float) -> Dict[str, float]:
+def gps_apogee_by_peak_alt(
+    gps: pd.DataFrame,
+    alt_rise_m: float,
+    slope_mps: float,
+    min_apogee_gain_m: float,
+    min_descent_after_apogee_m: float,
+) -> Dict[str, float]:
     """
     If GPS altitude exists, pick apogee index as max smoothed GPS altitude AFTER liftoff.
     """
@@ -448,6 +469,22 @@ def gps_apogee_by_peak_alt(gps: pd.DataFrame, alt_rise_m: float, slope_mps: floa
     alt_s = smooth(post["alt_m"].to_numpy(float), window=9)
     post = post.iloc[: len(alt_s)].copy()
     post["alt_sm_m"] = alt_s
+
+    pre_liftoff = gps[gps["t_s"] <= liftoff]["alt_m"].to_numpy(float)
+    baseline = float(np.nanmedian(pre_liftoff))
+    if not np.isfinite(baseline):
+        baseline = float(np.nanmedian(post["alt_m"].to_numpy(float)))
+
+    peak_pos = int(np.nanargmax(alt_s))
+    peak_smoothed_alt = float(alt_s[peak_pos])
+    if peak_smoothed_alt - baseline < min_apogee_gain_m:
+        return {}
+    if peak_pos < 2 or peak_pos >= len(alt_s) - 2:
+        return {}
+
+    descent_drop = peak_smoothed_alt - float(np.nanmin(alt_s[peak_pos + 1 :]))
+    if descent_drop < min_descent_after_apogee_m:
+        return {}
 
     idx = int(post["alt_sm_m"].idxmax())
     apogee_t = float(gps.loc[idx, "t_s"])
@@ -543,6 +580,8 @@ def main() -> None:
     ap.add_argument("--gps-alt-unit", type=str, default="auto", choices=["auto", "ft", "m", "mm"])
     ap.add_argument("--alt-rise-m", type=float, default=5.0)
     ap.add_argument("--slope-mps", type=float, default=2.0)
+    ap.add_argument("--min-gps-apogee-gain-m", type=float, default=30.0)
+    ap.add_argument("--min-gps-descent-after-apogee-m", type=float, default=10.0)
     args = ap.parse_args()
 
     data_dir = Path(args.data_dir)
@@ -601,9 +640,9 @@ def main() -> None:
         motor_raw = str(r.get("motor_name", "") or "")
         motor_name = normalize_motor_name(motor_raw)
 
-        alt_file = Path(str(r["altimeter_file"]))
+        alt_file = resolve_input_path(str(r["altimeter_file"]), manifest_path.parent)
         gps_file_str = str(r.get("gps_file", "") or "").strip()
-        gps_file = Path(gps_file_str) if gps_file_str else None
+        gps_file = resolve_input_path(gps_file_str, manifest_path.parent) if gps_file_str else None
 
         log(f"---- {flight_id}", log_path)
         log(f"rocket_id={rocket_id} motor={motor_name}", log_path)
@@ -641,7 +680,13 @@ def main() -> None:
 
             # Pad & GPS apogee
             gps_liftoff_t, pad_lat, pad_lon = gps_pad_and_liftoff(gps_df, args.alt_rise_m, args.slope_mps)
-            gps_ap = gps_apogee_by_peak_alt(gps_df, args.alt_rise_m, args.slope_mps)
+            gps_ap = gps_apogee_by_peak_alt(
+                gps_df,
+                args.alt_rise_m,
+                args.slope_mps,
+                args.min_gps_apogee_gain_m,
+                args.min_gps_descent_after_apogee_m,
+            )
 
             # Raven apogee (only if CSV)
             raven_alt_df = None
