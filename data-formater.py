@@ -215,8 +215,8 @@ def detect_liftoff(
     alt_s = smooth(np.nan_to_num(alt_m, nan=baseline), window=9)
     dt = np.diff(t)
     da = np.diff(alt_s)
-    slope = np.zeros_like(t)
-    slope[1:] = np.where(dt > 0, da / dt, 0.0)
+    slope = np.zeros_like(t, dtype=float)
+    slope[1:] = np.divide(da, dt, out=np.zeros_like(da, dtype=float), where=dt > 0)
 
     cond = (alt_s >= baseline + alt_rise_m) & (slope >= slope_mps)
     run = 0
